@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - Freedom Search{% endblock %}
+
+{% block extra_css %}
+
+<style>
+    .search-header {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(79, 70, 229, 0.1));
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        animation: slideDown 0.5s ease-out;
+    }
+    
+    .search-header::before {
+        content: '';
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(129, 140, 248, 0.2), transparent);
+        border-radius: 50%;
+        top: -150px;
+        right: -150px;
+        z-index: 0;
+    }
+    
+    .search-container {
+        position: relative;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        padding-right: 3.5rem;
+        border-radius: 12px;
+        border: 2px solid rgba(99, 102, 241, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--search);
+        backdrop-filter: blur(10px);
+    }
+    
+    .search-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+        background: var(--search-focus);
+        transform: translateY(-2px);
+    }
+    
+    .search-button {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+        border-radius: 10px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .search-button:hover {
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+    }
+    
+    .search-stats {
+        display: flex;
+        justify-content: space-between;
+        margin: 1rem 0 2rem;
+        color: #64748b;
+        font-size: 0.9rem;
+        opacity: 0;
+        animation: fadeIn 0.5s ease-out forwards;
+        animation-delay: 0.6s;
+    }
+    
+    .result-card {
+        background-color: var(--result-card);
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--primary-color);
+        animation: fadeIn 0.5s ease-out;
+        animation-fill-mode: both;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    
+    .result-card:nth-child(1) { animation-delay: 0.1s; }
+    .result-card:nth-child(2) { animation-delay: 0.2s; }
+    .result-card:nth-child(3) { animation-delay: 0.3s; }
+    .result-card:nth-child(4) { animation-delay: 0.4s; }
+    .result-card:nth-child(5) { animation-delay: 0.5s; }
+    
+    .result-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .result-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, transparent, rgba(99, 102, 241, 0.05), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+    
+    .result-card:hover::before {
+        transform: translateX(100%);
+    }
+    
+    .result-title {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .result-title a {
+        position: relative;
+        transition: color 0.3s ease;
+    }
+    
+    .result-title a::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--primary-color);
+        transition: width 0.3s ease;
+    }
+    
+    .result-title a:hover::after {
+        width: 100%;
+    }
+    
+    .result-url {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .result-snippet {
+        margin-bottom: 1rem;
+        line-height: 1.6;
+        color: #334155;
+    }
+    
+    .result-score {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background-color: rgba(99, 102, 241, 0.1);
+        color: var(--primary-color);
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.8rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .result-score:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+    
+    .highlight {
+        position: relative;
+        background: linear-gradient(120deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1));
+        padding: 0 0.25rem;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .highlight:hover {
+        background: linear-gradient(120deg, rgba(99, 102, 241, 0.3), rgba(99, 102, 241, 0.2));
+        transform: translateY(-1px);
+    }
+    
+    .empty-search {
+        text-align: center;
+        padding: 3rem;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    .empty-search i {
+        font-size: 4rem;
+        color: rgba(99, 102, 241, 0.3);
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .search-header {
+            padding: 1.5rem;
+        }
+        
+        .result-card {
+            padding: 1.25rem;
+        }
+    }
+    
+    /* Quick filters */
+    .quick-filters {
+        display: flex;
+        gap: 0.5rem;
+        margin: 1rem 0;
+        flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 20px;
+        background: var(--filter);
+        color: var(--primary-color);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-btn:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .filter-btn.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    /* Scroll to top button */
+    .scroll-top {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 40px;
+        height: 40px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .scroll-top.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .scroll-top:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-header">
+    <div class="search-container">
+        <form id="searchForm" action="/search" method="GET">
+            <input type="text" id="searchInput" name="q" class="search-input" value="{{ query }}" placeholder="Enter your search query...">
+            <button type="submit" class="search-button">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Quick Filters -->
+<div class="quick-filters">
+    <button class="filter-btn" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="recent">Recent</button>
+    <button class="filter-btn" data-filter="popular">Popular</button>
+    <button class="filter-btn" data-filter="high-score">High Score</button>
+</div>
+
+<!-- Search Results -->
+<div id="searchResults">
+    {% if results %}
+        <div class="search-stats">
+            <span>{{ results|length }} results found</span>
+            <span>Search time: {{ search_time|default('0.00') }} seconds</span>
+        </div>
+        
+        {% for result in results %}
+        <div class="result-card" data-score="{{ result.score }}">
+            <h3 class="result-title">
+                <a href="{{ result.url }}" target="_blank" class="text-decoration-none">
+                    {{ result.title or result.url }}
+                </a>
+            </h3>
+            <p class="result-url">
+                <a href="{{ result.url }}" target="_blank" class="text-decoration-none text-muted">
+                    {{ result.url }}
+                </a>
+            </p>
+            {% if result.snippet %}
+            <div class="result-snippet">{{ result.snippet|safe }}</div>
+            {% endif %}
+            <span class="result-score">
+                <i class="fas fa-chart-bar me-1"></i> Score: {{ "%.2f"|format(result.score) }}
+            </span>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-search">
+            <i class="fas fa-search"></i>
+            <h4>No results found for "{{ query }}"</h4>
+            <p class="text-muted">Try different keywords or check your spelling.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Scroll to Top Button -->
+<button class="scroll-top">
+    <i class="fas fa-arrow-up"></i>
+</button>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Highlight search terms in results
+    function highlightSearchTerms() {
+        const searchTerms = $('#searchInput').val().toLowerCase().split(' ');
+        
+        $('.result-snippet').each(function() {
+            let content = $(this).html();
+            
+            searchTerms.forEach(term => {
+                if (term.length > 2) {
+                    const regex = new RegExp('\\b(' + term + ')\\b', 'gi');
+                    content = content.replace(regex, '<span class="highlight">$1</span>');
+                }
+            });
+            
+            $(this).html(content);
+        });
+    }
+    
+    // Quick filters functionality
+    $('.filter-btn').click(function() {
+        $('.filter-btn').removeClass('active');
+        $(this).addClass('active');
+        
+        const filter = $(this).data('filter');
+        const cards = $('.result-card');
+        
+        switch(filter) {
+            case 'recent':
+                cards.sort((a, b) => $(b).data('timestamp') - $(a).data('timestamp'));
+                break;
+            case 'popular':
+                cards.sort((a, b) => $(b).data('views') - $(a).data('views'));
+                break;
+            case 'high-score':
+                cards.sort((a, b) => $(b).data('score') - $(a).data('score'));
+                break;
+            default:
+                cards.sort((a, b) => $(b).data('score') - $(a).data('score'));
+        }
+        
+        $('#searchResults').append(cards);
+    });
+    
+    // Scroll to top functionality
+    const scrollTop = $('.scroll-top');
+    
+    $(window).scroll(function() {
+        if ($(this).scrollTop() > 300) {
+            scrollTop.addClass('visible');
+        } else {
+            scrollTop.removeClass('visible');
+        }
+    });
+    
+    scrollTop.click(function() {
+        $('html, body').animate({scrollTop: 0}, 500);
+    });
+    
+    // Smooth scroll for anchor links
+    $('a[href^="#"]').click(function(e) {
+        e.preventDefault();
+        const target = $($(this).attr('href'));
+        if (target.length) {
+            $('html, body').animate({
+                scrollTop: target.offset().top - 100
+            }, 500);
+        }
+    });
+    
+    // Call highlight function when the page loads
+    highlightSearchTerms();
+});
+</script>
+{% endblock %} 

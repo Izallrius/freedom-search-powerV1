@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - Freedom Search{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-header {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(79, 70, 229, 0.1));
+        border-radius: 24px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        animation: fadeIn 0.8s ease-out;
+        position: sticky;
+        top: 80px;
+        z-index: 900;
+        backdrop-filter: blur(10px);
+        background-color: var(--card-bg);
+    }
+    
+    .search-container {
+        position: relative;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 1.25rem 1.5rem;
+        padding-right: 4rem;
+        border-radius: 16px;
+        border: 2px solid var(--border-color);
+        box-shadow: 0 4px 20px var(--shadow-color);
+        font-size: 1.1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--input-bg);
+        color: var(--input-text);
+    }
+    
+    .search-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 8px 25px var(--shadow-color);
+        background: var(--input-bg);
+        transform: translateY(-2px);
+    }
+    
+    .search-button {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+        border-radius: 12px;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+    }
+    
+    .search-button:hover {
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+    }
+    
+    .search-stats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 1rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    
+    .search-results {
+        animation: fadeIn 0.8s ease-out 0.2s backwards;
+    }
+    
+    .result-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px var(--shadow-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+    
+    .result-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, transparent, var(--primary-color), transparent);
+        opacity: 0.05;
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+    
+    .result-card:hover::before {
+        transform: translateX(100%);
+    }
+    
+    .result-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px var(--shadow-color);
+        background: var(--card-bg);
+    }
+    
+    .result-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .result-title:hover {
+        color: var(--secondary-color);
+    }
+    
+    .result-url {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        word-break: break-all;
+    }
+    
+    .result-snippet {
+        color: var(--text-color);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .result-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+    
+    .result-meta i {
+        margin-right: 0.5rem;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+        animation: fadeIn 0.8s ease-out 0.4s backwards;
+    }
+    
+    .page-button {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 2px solid var(--border-color);
+        background: var(--card-bg);
+        color: var(--primary-color);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    .page-button:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    .page-button.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+        animation: fadeIn 0.8s ease-out;
+    }
+    
+    .no-results i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+    }
+    
+    .suggestions {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: var(--badge-bg);
+        border-radius: 16px;
+        animation: fadeIn 0.8s ease-out 0.6s backwards;
+        border: 1px solid var(--border-color);
+    }
+    
+    .suggestions-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .suggestions-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .suggestion-tag {
+        padding: 0.5rem 1rem;
+        background: var(--card-bg);
+        border-radius: 20px;
+        color: var(--primary-color);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid var(--border-color);
+        text-decoration: none;
+    }
+    
+    .suggestion-tag:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Filter styles */
+    .filter-section {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .filter-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .filter-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-label {
+        display: block;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .filter-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 2px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--input-text);
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+    .filter-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--badge-bg);
+        outline: none;
+    }
+
+    .filter-select option {
+        background: var(--input-bg);
+        color: var(--input-text);
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @media (max-width: 768px) {
+        .search-header {
+            padding: 1.5rem;
+            top: 60px;
+        }
+        
+        .search-input {
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+        }
+        
+        .search-button {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        
+        .search-stats {
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .result-card {
+            padding: 1.25rem;
+        }
+        
+        .result-title {
+            font-size: 1.1rem;
+        }
+    }
+
+    /* Quick filters */
+    .quick-filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        animation: fadeIn 0.8s ease-out 0.3s backwards;
+    }
+    
+    .filter-tag {
+        padding: 0.5rem 1rem;
+        background: var(--card-bg);
+        border-radius: 20px;
+        color: var(--primary-color);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filter-tag i {
+        font-size: 0.8rem;
+    }
+    
+    .filter-tag:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+        border-color: var(--primary-color);
+    }
+    
+    .filter-tag.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-header">
+    <div class="search-container">
+        <form id="searchForm" action="/search" method="GET">
+            <input type="text" id="searchInput" name="q" class="search-input" 
+                   placeholder="Enter your search query..." 
+                   value="{{ query }}">
+            <button type="submit" class="search-button">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        <div class="search-stats">
+            <span><i class="fas fa-clock"></i> {{ search_time }}s</span>
+            <span><i class="fas fa-file-alt"></i> {{ total_results }} results</span>
+        </div>
+    </div>
+</div>
+
+<div class="filter-section">
+    <h3 class="filter-title">Filters</h3>
+    <div class="filter-group">
+        <label class="filter-label">Sort by</label>
+        <select class="filter-select" name="sort">
+            <option value="relevance">Relevance</option>
+            <option value="date">Date</option>
+            <option value="score">Score</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label class="filter-label">Time range</label>
+        <select class="filter-select" name="time">
+            <option value="all">All time</option>
+            <option value="day">Last 24 hours</option>
+            <option value="week">Last week</option>
+            <option value="month">Last month</option>
+        </select>
+    </div>
+</div>
+
+<div class="search-results">
+    {% if results %}
+        {% for result in results %}
+            <div class="result-card">
+                <a href="{{ result.url }}" class="result-title" target="_blank">
+                    {{ result.title }}
+                </a>
+                <div class="result-url">{{ result.url }}</div>
+                <div class="result-snippet">{{ result.snippet }}</div>
+                <div class="result-meta">
+                    <span><i class="fas fa-calendar"></i> {{ result.date }}</span>
+                    <span><i class="fas fa-star"></i> {{ result.score }}</span>
+                </div>
+            </div>
+        {% endfor %}
+        
+        {% if total_pages > 1 %}
+            <div class="pagination">
+                {% if current_page > 1 %}
+                    <a href="{{ url_for('search', q=query, page=current_page-1) }}" class="page-button">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                {% endif %}
+                
+                {% for page in range(1, total_pages + 1) %}
+                    <a href="{{ url_for('search', q=query, page=page) }}" 
+                       class="page-button {% if page == current_page %}active{% endif %}">
+                        {{ page }}
+                    </a>
+                {% endfor %}
+                
+                {% if current_page < total_pages %}
+                    <a href="{{ url_for('search', q=query, page=current_page+1) }}" class="page-button">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h3>No results found</h3>
+            <p>Try different keywords or check your spelling</p>
+        </div>
+        
+        {% if suggestions %}
+            <div class="suggestions">
+                <h4 class="suggestions-title">Did you mean?</h4>
+                <div class="suggestions-list">
+                    {% for suggestion in suggestions %}
+                        <a href="{{ url_for('search', q=suggestion) }}" class="suggestion-tag">
+                            {{ suggestion }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Add hover effect to search input
+    $('.search-input').hover(
+        function() { $(this).css('transform', 'translateY(-2px)'); },
+        function() { $(this).css('transform', 'translateY(0)'); }
+    );
+    
+    // Add ripple effect to search button
+    $('.search-button').click(function(e) {
+        const ripple = $('<div class="ripple"></div>');
+        $(this).append(ripple);
+        
+        const x = e.pageX - $(this).offset().left;
+        const y = e.pageY - $(this).offset().top;
+        
+        ripple.css({
+            left: x,
+            top: y
+        });
+        
+        setTimeout(() => ripple.remove(), 1000);
+    });
+    
+    // Animate result cards on scroll
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+    
+    $('.result-card').each(function() {
+        $(this).css({
+            opacity: '0',
+            transform: 'translateY(20px)',
+            transition: 'all 0.5s ease-out'
+        });
+        observer.observe(this);
+    });
+});
+</script>
+{% endblock %} 

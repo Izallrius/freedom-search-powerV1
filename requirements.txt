@@ -1,0 +1,66 @@
+# Web Framework
+Flask==2.0.1
+Werkzeug==2.0.1
+
+# Database ORM
+SQLAlchemy==1.4.23
+
+# Web Scraping and HTTP Requests
+requests==2.25.1
+beautifulsoup4==4.9.3
+
+# Natural Language Processing
+nltk==3.6.3
+
+# URL and HTML parsing dependencies
+urllib3==1.26.20
+soupsieve==2.6
+
+# Template engine (comes with Flask but listing for completeness)
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+
+# WSGI utilities
+itsdangerous==2.2.0
+
+# CLI utilities
+click==8.1.8
+
+# Progress bars for CLI operations
+tqdm==4.67.1
+
+# Character encoding detection
+chardet==4.0.0
+
+# International domain names
+idna==2.10
+
+# SSL certificate verification
+certifi==2025.1.31
+
+# Terminal colors
+colorama==0.4.6
+
+# Environment variable management
+python-dotenv==0.19.0
+
+# Regular expressions (enhanced)
+regex==2024.11.6
+
+# Parallel processing
+joblib==1.4.2
+
+# Numerical computing (if needed for advanced text processing)
+numpy==2.2.4
+
+# Caching (for performance optimization)
+diskcache==5.6.3
+
+# Type hints support
+typing-extensions==4.12.2
+
+# Async support (if needed)
+greenlet==3.1.1
+
+# LLM support (if using AI features)
+llama-cpp-python==0.3.8

@@ -1,0 +1,89 @@
+====================================
+FREEDOM SEARCH - USAGE GUIDE
+====================================
+
+This guide provides simple instructions on how to use Freedom Search.
+
+1. SETTING UP
+------------------------------------
+- Install Python 3.7 or higher
+- Install required packages: pip install -r requirements.txt
+- Initialize databases: python init_db.py
+
+2. CRAWLING WEB PAGES
+------------------------------------
+Use the crawler to collect pages:
+
+python crawler.py <url> [--max-pages MAX_PAGES] [--max-depth MAX_DEPTH]
+
+EXAMPLES:
+- Basic crawl:
+  python crawler.py https://example.com
+
+- Limit to 50 pages with depth of 2:
+  python crawler.py https://news.ycombinator.com --max-pages 50 --max-depth 2
+
+- Crawl a news site:
+  python crawler.py https://bbc.com/news --max-pages 100
+
+3. INDEXING PAGES
+------------------------------------
+Process the crawled pages to make them searchable:
+
+python indexer.py
+
+This will:
+- Process all crawled pages
+- Calculate word importance scores
+- Store indexed information in the database
+
+4. STARTING THE WEB APPLICATION
+------------------------------------
+Start the web interface:
+
+python app.py
+
+Open your browser and go to: http://localhost:5000
+
+5. SEARCHING
+------------------------------------
+- Enter your search terms in the search box on the homepage
+- Click search or press Enter
+- Results will be displayed with titles, URLs, and relevance scores
+
+EXAMPLE SEARCHES:
+- technology news
+- artificial intelligence
+- latest developments
+- climate change
+
+6. NAVIGATING THE INTERFACE
+------------------------------------
+- Home: Main search page
+- Crawled Pages: View all crawled web pages
+- Indexed Pages: View all pages processed for search
+
+7. VIEWING DETAILS
+------------------------------------
+- In Crawled Pages:
+  Click "View Content" to see the full page content
+
+- In Indexed Pages:
+  Click "View Scores" to see word frequency scores
+  Click "View Content" to see the full page content
+
+8. TROUBLESHOOTING
+------------------------------------
+If search results are empty:
+- Make sure you've crawled pages (python crawler.py <url>)
+- Make sure you've indexed pages (python indexer.py)
+- Try different search terms
+
+If you get errors:
+- Check if all required packages are installed
+- Make sure databases are initialized (python init_db.py)
+- Check internet connection for crawling
+
+====================================
+
+For more detailed information, refer to README.md 

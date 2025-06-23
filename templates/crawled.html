@@ -1,0 +1,716 @@
+{% extends "base.html" %}
+
+{% block title %}Crawled Pages - Freedom Search{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(79, 70, 229, 0.1));
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(129, 140, 248, 0.2), transparent);
+        border-radius: 50%;
+        top: -150px;
+        right: -150px;
+        z-index: 0;
+    }
+    
+    .page-header h2 {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+    
+    .search-container {
+        max-width: 400px;
+        position: relative;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1.25rem;
+        padding-right: 2.5rem;
+        border-radius: 8px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    
+    .search-button {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .search-button:hover {
+        color: var(--secondary-color);
+    }
+    
+    .table-container {
+        background-color: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(99, 102, 241, 0.05);
+    }
+    
+    .table thead {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .table thead th {
+        color: white;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border: none;
+    }
+    
+    .table tbody td {
+        vertical-align: middle;
+        padding: 1rem;
+    }
+    
+    .btn-view {
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .btn-view:hover {
+        transform: translateY(-2px);
+    }
+    
+    .url-cell {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .title-cell {
+        max-width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .date-cell {
+        white-space: nowrap;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+    
+    .status-success {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+    
+    .status-error {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .status-pending {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: rgba(99, 102, 241, 0.3);
+        margin-bottom: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .highlight {
+        background-color: rgba(99, 102, 241, 0.1);
+        padding: 0 0.25rem;
+        border-radius: 4px;
+    }
+    
+    /* Animation for modal */
+    .modal.fade .modal-dialog {
+        transform: scale(0.8);
+        transition: transform 0.3s ease;
+    }
+    
+    .modal.show .modal-dialog {
+        transform: scale(1);
+    }
+    
+    /* Custom scrollbar for modal content */
+    .modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .modal-body::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    
+    .modal-body::-webkit-scrollbar-thumb {
+        background: var(--accent-color);
+        border-radius: 3px;
+    }
+    
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .table-container {
+            border-radius: 12px;
+        }
+        
+        .table thead th, .table tbody td {
+            padding: 0.75rem;
+        }
+        
+        .url-cell, .title-cell {
+            max-width: 150px;
+        }
+    }
+    
+    .header {
+        margin-bottom: 2rem;
+    }
+    
+    .search-bar {
+        margin-bottom: 1.5rem;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    th {
+        cursor: pointer;
+        position: relative;
+        padding-right: 20px !important;
+    }
+    
+    th.sorted-asc::after, th.sorted-desc::after {
+        content: "";
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+    }
+    
+    th.sorted-asc::after {
+        border-bottom: 5px solid #555;
+        margin-top: -5px;
+    }
+    
+    th.sorted-desc::after {
+        border-top: 5px solid #555;
+        margin-top: -2.5px;
+    }
+    
+    td {
+        vertical-align: middle;
+    }
+    
+    .td-url {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .title-cell {
+        max-width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .date-cell {
+        min-width: 120px;
+        white-space: nowrap;
+    }
+    
+    .action-cell {
+        white-space: nowrap;
+        text-align: right;
+    }
+    
+    .btn-view {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #ced4da;
+        margin-bottom: 1rem;
+    }
+    
+    .highlight {
+        background-color: rgba(255, 255, 0, 0.3);
+        padding: 2px;
+        border-radius: 2px;
+    }
+    
+    /* Pagination Styles */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pagination {
+        margin-bottom: 0;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .page-link {
+        color: #0d6efd;
+        cursor: pointer;
+    }
+    
+    .page-link:hover {
+        background-color: #e9ecef;
+    }
+    
+    .pagination-info {
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="header">
+        <h1 class="h3 mb-3">Crawled Pages</h1>
+        <p class="text-muted">View and manage all pages that have been crawled by the search engine.</p>
+    </div>
+    
+    <div class="search-bar">
+        <div class="input-group">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search crawled pages..." aria-label="Search">
+            <button class="btn btn-primary" type="button" id="searchButton">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+    </div>
+    
+    {% if pages %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>URL</th>
+                    <th>Crawled At</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                {% for page in pages %}
+                <tr>
+                    <td class="title-cell">{{ page.title or 'No Title' }}</td>
+                    <td class="td-url">
+                        <a href="{{ page.url }}" target="_blank" class="text-decoration-none" title="{{ page.url }}">
+                            {{ page.url }}
+                        </a>
+                    </td>
+                    <td class="date-cell">
+                        {% if page.crawled_at %}
+                        {{ page.crawled_at.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                        Unknown
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if page.indexed %}
+                        <span class="badge bg-success">Indexed</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Not Indexed</span>
+                        {% endif %}
+                    </td>
+                    <td class="action-cell">
+                        <button class="btn btn-view btn-outline-secondary btn-sm view-content" 
+                                data-content="{{ page.content|e }}"
+                                data-title="{{ page.title|e or 'No Title' }}"
+                                data-url="{{ page.url }}">
+                            <i class="fas fa-file-alt me-1"></i> View
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Pagination Controls -->
+        <div class="pagination-container">
+            <nav aria-label="Crawled pages pagination">
+                <ul class="pagination" id="pagination">
+                    <!-- Pagination links will be inserted here by JavaScript -->
+                </ul>
+            </nav>
+        </div>
+        <div class="pagination-info" id="paginationInfo">
+            <!-- Pagination info will be inserted here by JavaScript -->
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-spider"></i>
+        <h4>No Crawled Pages</h4>
+        <p class="text-muted">There are no crawled pages available yet. Try running the crawler first.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Content Modal -->
+<div class="modal fade" id="contentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Page Content</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6 id="modalTitle" class="fw-bold"></h6>
+                    <a id="modalUrl" href="#" target="_blank" class="text-decoration-none small"></a>
+                </div>
+                <pre id="modalContent" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Pagination variables
+    const itemsPerPage = 20;
+    let currentPage = 1;
+    let filteredRows = [];
+    
+    // Content modal
+    const contentModal = new bootstrap.Modal(document.getElementById('contentModal'));
+    
+    // Get all table rows
+    const allRows = $('table tbody tr').toArray();
+    
+    // Initialize pagination
+    function initPagination() {
+        filteredRows = allRows.filter(row => $(row).css('display') !== 'none');
+        const totalRows = filteredRows.length;
+        const totalPages = Math.ceil(totalRows / itemsPerPage);
+        
+        // Don't show pagination if we have less than or equal to itemsPerPage rows
+        if (totalRows <= itemsPerPage) {
+            $('.pagination-container, .pagination-info').hide();
+            return;
+        } else {
+            $('.pagination-container, .pagination-info').show();
+        }
+        
+        // Generate pagination links
+        updatePaginationLinks(totalPages);
+        
+        // Show initial page
+        showPage(1, filteredRows);
+        
+        // Update pagination info
+        updatePaginationInfo(totalRows);
+    }
+    
+    // Update pagination links based on current page
+    function updatePaginationLinks(totalPages) {
+        const pagination = $('#pagination');
+        pagination.empty();
+        
+        // Previous button
+        pagination.append(`
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" aria-label="Previous" ${currentPage === 1 ? 'tabindex="-1" aria-disabled="true"' : ''} data-page="${currentPage - 1}">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        `);
+        
+        // Determine page range to show
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        
+        // Adjust start page if end page is at the limit
+        if (endPage === totalPages) {
+            startPage = Math.max(1, endPage - 4);
+        }
+        
+        // First page link if needed
+        if (startPage > 1) {
+            pagination.append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="1">1</a>
+                </li>
+            `);
+            
+            if (startPage > 2) {
+                pagination.append(`
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">...</a>
+                    </li>
+                `);
+            }
+        }
+        
+        // Page links
+        for (let i = startPage; i <= endPage; i++) {
+            pagination.append(`
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
+            `);
+        }
+        
+        // Last page link if needed
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                pagination.append(`
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">...</a>
+                    </li>
+                `);
+            }
+            
+            pagination.append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
+                </li>
+            `);
+        }
+        
+        // Next button
+        pagination.append(`
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" aria-label="Next" ${currentPage === totalPages ? 'tabindex="-1" aria-disabled="true"' : ''} data-page="${currentPage + 1}">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        `);
+        
+        // Add click events to pagination links
+        $('.page-link').on('click', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (page && page !== currentPage) {
+                showPage(page, filteredRows);
+            }
+        });
+    }
+    
+    // Update pagination info text
+    function updatePaginationInfo(totalRows) {
+        const start = (currentPage - 1) * itemsPerPage + 1;
+        const end = Math.min(currentPage * itemsPerPage, totalRows);
+        $('#paginationInfo').text(`Showing ${start}-${end} of ${totalRows} rows`);
+    }
+    
+    // Show specific page of results
+    function showPage(page, rows) {
+        // Update current page
+        currentPage = page;
+        
+        // Hide all rows
+        $(rows).hide();
+        
+        // Calculate start and end indices
+        const startIndex = (page - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, rows.length);
+        
+        // Show only the rows for the current page
+        for (let i = startIndex; i < endIndex; i++) {
+            $(rows[i]).show();
+        }
+        
+        // Update pagination links and info
+        updatePaginationLinks(Math.ceil(rows.length / itemsPerPage));
+        updatePaginationInfo(rows.length);
+    }
+    
+    // Table search functionality
+    function filterTable() {
+        const searchText = $('#searchInput').val().toLowerCase();
+        
+        // Reset display of all rows first
+        $(allRows).each(function() {
+            $(this).css('display', '');
+        });
+        
+        if (searchText) {
+            $(allRows).each(function() {
+                const row = $(this);
+                const title = row.find('td:first').text().toLowerCase();
+                const url = row.find('td:nth-child(2)').text().toLowerCase();
+                
+                if (title.includes(searchText) || url.includes(searchText)) {
+                    // Reset any previous highlighting
+                    row.find('td:first').html(row.find('td:first').text());
+                    row.find('td:nth-child(2) a').html(row.find('td:nth-child(2) a').text());
+                    
+                    // Apply highlighting if there's a match
+                    if (title.includes(searchText)) {
+                        const titleCell = row.find('td:first');
+                        const titleText = titleCell.text();
+                        const regex = new RegExp(searchText, 'gi');
+                        titleCell.html(titleText.replace(regex, match => `<span class="highlight">${match}</span>`));
+                    }
+                    
+                    if (url.includes(searchText)) {
+                        const urlCell = row.find('td:nth-child(2) a');
+                        const urlText = urlCell.text();
+                        const regex = new RegExp(searchText, 'gi');
+                        urlCell.html(urlText.replace(regex, match => `<span class="highlight">${match}</span>`));
+                    }
+                    
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
+        }
+        
+        // Reinitialize pagination with filtered rows
+        initPagination();
+    }
+    
+    $('#searchInput').on('input', filterTable);
+    $('#searchButton').click(filterTable);
+    
+    // Content modal
+    $('.view-content').click(function() {
+        try {
+            const content = $(this).data('content');
+            const title = $(this).data('title');
+            const url = $(this).data('url');
+            
+            $('#modalTitle').text(title);
+            $('#modalUrl').text(url).attr('href', url);
+            $('#modalContent').text(content || 'No content available');
+            
+            contentModal.show();
+        } catch (error) {
+            console.error('Error displaying content:', error);
+            alert('Error displaying content. Please try again.');
+        }
+    });
+    
+    // Table sorting
+    $('th').click(function() {
+        const table = $(this).parents('table').eq(0);
+        const rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()));
+        this.asc = !this.asc;
+        
+        if (!this.asc) {
+            rows.reverse();
+        }
+        
+        for (let i = 0; i < rows.length; i++) {
+            table.append(rows[i]);
+        }
+        
+        // Update visual indicator of sort direction
+        $('th').removeClass('sorted-asc sorted-desc');
+        $(this).addClass(this.asc ? 'sorted-asc' : 'sorted-desc');
+        
+        // After sorting, we need to re-apply pagination
+        allRows.length = 0;
+        allRows.push(...$('table tbody tr').toArray());
+        initPagination();
+    });
+    
+    function comparer(index) {
+        return function(a, b) {
+            const valA = getCellValue(a, index);
+            const valB = getCellValue(b, index);
+            return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.localeCompare(valB);
+        };
+    }
+    
+    function getCellValue(row, index) {
+        return $(row).children('td').eq(index).text();
+    }
+    
+    // Initialize pagination on page load
+    initPagination();
+});
+</script>
+{% endblock %} 

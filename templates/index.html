@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}Freedom Search - Your Personal Search Engine{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #5271ff;
+        --secondary-color: #3755ed;
+        --accent-color: #7e92ff;
+    }
+
+    .hero-section {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(79, 70, 229, 0.1));
+        border-radius: 24px;
+        margin-bottom: 4rem;
+        animation: fadeIn 1s ease-out;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" fill="rgba(99, 102, 241, 0.1)"/></svg>');
+        opacity: 0.5;
+        animation: backgroundMove 20s linear infinite;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        max-width: 800px;
+        padding: 2rem;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: slideUp 0.8s ease-out;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: #64748b;
+        margin-bottom: 2rem;
+        animation: slideUp 0.8s ease-out 0.2s backwards;
+    }
+    
+    .search-container {
+        position: relative;
+        max-width: 700px;
+        margin: 0 auto;
+        animation: slideUp 0.8s ease-out 0.4s backwards;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 1.25rem 1.5rem;
+        padding-right: 4rem;
+        border-radius: 16px;
+        border: 2px solid rgba(99, 102, 241, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        font-size: 1.1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--search);
+        backdrop-filter: blur(10px);
+    }
+    
+    .search-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+        background: var(--search-focus);
+        transform: translateY(-2px);
+    }
+    
+    .search-button {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+        border-radius: 12px;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+    }
+    
+    .search-button:hover {
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+    }
+    
+    .features-section {
+        padding: 4rem 0;
+        animation: fadeIn 1s ease-out 0.6s backwards;
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, transparent, rgba(99, 102, 241, 0.05), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+    
+    .feature-card:hover::before {
+        transform: translateX(100%);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1);
+    }
+    
+    .feature-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-color);
+    }
+    
+    .feature-description {
+        color: #64748b;
+        line-height: 1.6;
+    }
+    
+    .stats-section {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(79, 70, 229, 0.1));
+        border-radius: 24px;
+        padding: 4rem 2rem;
+        margin: 4rem 0;
+        text-align: center;
+        animation: fadeIn 1s ease-out 0.8s backwards;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+    
+    .stat-item {
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        transform: translateY(-5px);
+        background: white;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #64748b;
+        font-size: 1.1rem;
+    }
+    
+    @keyframes backgroundMove {
+        from { background-position: 0 0; }
+        to { background-position: 100% 100%; }
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .search-input {
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+        }
+        
+        .search-button {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Freedom Search</h1>
+        <p class="hero-subtitle">Your personal search engine for unbiased, comprehensive results</p>
+        <div class="search-container">
+            <form id="searchForm" action="/search" method="GET">
+                <input type="text" id="searchInput" name="q" class="search-input" placeholder="Enter your search query...">
+                <button type="submit" class="search-button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<section class="features-section">
+    <div class="container">
+        <h2 class="text-center mb-4">Why Choose Freedom Search?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="feature-title">Unbiased Results</h3>
+                <p class="feature-description">Get search results based on relevance and quality, free from commercial influence.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="feature-title">Lightning Fast</h3>
+                <p class="feature-description">Experience blazing-fast search results with our optimized indexing system.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <h3 class="feature-title">Comprehensive Coverage</h3>
+                <p class="feature-description">Access a vast collection of web pages from various sources and domains.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="stats-section">
+    <div class="container">
+        <h2 class="text-center mb-4">Search Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_pages|default('0') }}</div>
+                <div class="stat-label">Indexed Pages</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ total_searches|default('0') }}</div>
+                <div class="stat-label">Total Searches</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ avg_search_time|default('0.00') }}s</div>
+                <div class="stat-label">Average Search Time</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Animate numbers in stats
+    function animateNumber(element, target) {
+        let current = 0;
+        const increment = target / 100;
+        const duration = 2000;
+        const step = duration / 100;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            element.textContent = Math.round(current).toLocaleString();
+        }, step);
+    }
+    
+    // Start animation when stats section is in view
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                $('.stat-number').each(function() {
+                    const target = parseInt($(this).text());
+                    animateNumber(this, target);
+                });
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    
+    observer.observe($('.stats-section')[0]);
+    
+    // Add hover effect to search input
+    $('.search-input').hover(
+        function() { $(this).css('transform', 'translateY(-2px)'); },
+        function() { $(this).css('transform', 'translateY(0)'); }
+    );
+    
+    // Add ripple effect to search button
+    $('.search-button').click(function(e) {
+        const ripple = $('<div class="ripple"></div>');
+        $(this).append(ripple);
+        
+        const x = e.pageX - $(this).offset().left;
+        const y = e.pageY - $(this).offset().top;
+        
+        ripple.css({
+            left: x,
+            top: y
+        });
+        
+        setTimeout(() => ripple.remove(), 1000);
+    });
+});
+</script>
+{% endblock %} 
